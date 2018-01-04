@@ -17,8 +17,6 @@ class WebMusicDataProcessor(param: String, context: SparkContext, sqc: SQLContex
   val sc: SparkContext = context
   val sqlContext:SQLContext = sqc
   
-
-
   def processData(): DataFrame = {
     val log = LogManager.getRootLogger
     log.setLevel(Level.INFO)
@@ -34,11 +32,7 @@ class WebMusicDataProcessor(param: String, context: SparkContext, sqc: SQLContex
       val userId = (tag \ "user_id").text
       val songId = (tag \ "song_id").text
       var artistId = (tag \ "artist_id").text
-      
-     // if (artistId.equals("")) {
-     //   artistId = broadcastSongArtistMap.value.get(songId).getOrElse("Invalid")
-    //  }
-      
+          
       val timestamp = (tag \ "timestamp").text
       var timestampLong:Long = 0
       if (!timestamp.equals("")) {
@@ -58,10 +52,7 @@ class WebMusicDataProcessor(param: String, context: SparkContext, sqc: SQLContex
      
       val stationId = (tag \ "station_id").text
       
-      //if (geoCd.equals("")) {
-      //  geoCd = broadcastStndIdGeoCdMap.value.get(stationId).getOrElse("Invalid")
-     // }
-      
+          
       val songEndType = (tag \ "song_end_type").text
       var like = (tag \ "like").text
       if (like.equals("")) like = "0"
@@ -80,9 +71,9 @@ class WebMusicDataProcessor(param: String, context: SparkContext, sqc: SQLContex
     val recordList = recordListBuffer.toList
          
     val recordRDD = sc.parallelize(recordList)
-    val recordDF = recordRDD.toDF("User_id", "Song_id", "Artist_id", "Timestamp",
+    val recordDF = recordRDD.toDF("User_id", "Songs_id", "Artist_id", "Timestamp",
       "Start_ts", "End_ts", "Geo_cd", "Station_id", "Song_end_type",
-       "Like", "Dislike")
+       "Likes", "Dislikes")
        
     log.info("Number of records =" + recordDF.count)
     log.info("Showing records for Web Music Data ")
