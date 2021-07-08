@@ -27,14 +27,11 @@ ii.	MusicDataProcessorApp - This is the main application for processing music da
 iii.	WebMusicDataProcessor – This is the class for processing music data stored in /data/web/file-1.xml  folder and use processData method to return dataframes
 iv.	MobileMusicDataProcessor - This is the class for processing music data stored in /data/mob/file.txt folder and use processData method to return dataframes
 v.	MusicDataEnricher - This is the used for enriching and validating the datasets. New columns are added to dataframe for the processed data. The new columns added to temporary table MusicDataDetailed are as below:
-          a.  modified_Geo_cd – This field is used to populate Null/blank values in Geo_cd column. If Geo_cd column is not blank, the value will copied as it is to modified_Geo_cd. If Geo_cd column is  blank then consults the look table StationIdGeoCd based on stationId, If found populate it, else put value Invalid
-          
-          b.   modified_Artist_id – This field is used to populate Null/blank values in Artist_id column. If Artist_id column is not blank, the value will copied as it is to modified_Artist_id. If Artist_id column  is  blank then consults the look table SongArtist table based on songId, If found populate it, else put value Invalid
-          
+
+          a.  modified_Geo_cd – This field is used to populate Null/blank values in Geo_cd column. If Geo_cd column is not blank, the value will copied as it is to modified_Geo_cd. If Geo_cd column is  blank then consults the look table StationIdGeoCd based on stationId, If found populate it, else put value Invalid          
+          b.   modified_Artist_id – This field is used to populate Null/blank values in Artist_id column. If Artist_id column is not blank, the value will copied as it is to modified_Artist_id. If Artist_id column  is  blank then consults the look table SongArtist table based on songId, If found populate it, else put value Invalid          
            c. follower – This field is used when the user follows the artist. For each record, for userId consult UserArtist table to find the list of artists user is following. If it is blank, then follower will be 0. If it is not blank and the corresponding artistId for the record is present in artist List from the map, then set follower to 1
-
           d. subscribed – This filed is used to know if the user was a subscriber when he played the music. This is done by getting the userId for the record and consulting UserSubscription table to get the tuple (start_ts,end_ts). If it does not exist then subscribed field will be 0. If I exists, If the start_ts of record is in between (start_ts,end_ts) of UserSubscritpion then subscribed field will be 1 else it will be 0
-
          e. isValid- This field is used to know if the record is valid or not. Isvalid if valid will have value 1 else 0. The following validations are done:
            If User_id is blank then  (0)
            If Song_id is blank then 0
@@ -49,16 +46,11 @@ vi.	MusicDataPopulateMapFromLookupTables - This is the used for populating maps 
 vii.	MusicDataAnalyzer - - This is used for analyzing the data in dataframes and store the results in HDFS file:
 
          Top10Stations_<Timestamp> - Top 10 stations where maximum number of songs played which is liked by unique user
-
          MusicDurationByUserType_<Timestmp> - Music Duration by user category of user: Subscribed, Unsubscribed
-
          Top10SongsHavignMaximumRevenue_<Timestamp> - Top 10 songs having maximum revenue
-
          Top10ConnectedArtists_<Timestamp> - Top 10 connected artists
-
-        Top10UnsubscribedUsers_<Timestamp> - Top 10 unsubscribed users
-    
-    
+        Top10UnsubscribedUsers_<Timestamp> - Top 10 unsubscribed users    
+   
 ## Implementation
     
 MODULE1: LoadHBaseTables:  Loading HBase Tables with Lookup Data
