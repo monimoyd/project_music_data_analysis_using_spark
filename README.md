@@ -17,13 +17,11 @@ A leading music-catering company is planning to analyse large amount of data rec
  To solve the Music Data Analysis Requirement the following modules are used
 
 i.	LoadHBaseTables– This is used for loading the lookup data from csv files to the relevant tables in Hbase. Hbase tables used are as below:
-      a. StationIdGeoCd –  This HBase table is used for storing mapping between stationId and GeoCd
-	
-      b. SongArtist - This HBase table is used for storing mapping beween Song and Artist
-      
-      c.	UserArtist – This HBase table is used for storing mapping beween userId and List of artists he follows
-      
-      d. 	UserSubscription- This HBase table is used for storing mapping beween userId and subscription start timestamp and end timestamp
+
+      a. StationIdGeoCd –  This HBase table is used for storing mapping between stationId and GeoCd	
+      b. SongArtist - This HBase table is used for storing mapping beween Song and Artist      
+      c. UserArtist – This HBase table is used for storing mapping beween userId and List of artists he follows      
+      d. UserSubscription- This HBase table is used for storing mapping beween userId and subscription start timestamp and end timestamp
       
 ii.	MusicDataProcessorApp - This is the main application for processing music data. It in turn calls multiple submodules as below
 iii.	WebMusicDataProcessor – This is the class for processing music data stored in /data/web/file-1.xml  folder and use processData method to return dataframes
