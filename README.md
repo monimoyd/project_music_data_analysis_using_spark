@@ -124,7 +124,254 @@ To load the HBase table, I used the class MusicDataPopulateMapFromLookupTables
 
 ## OUTPUT:
 
-All the folders are in HDFS are as below:
+### All the folders are in HDFS are as below:
+
+![All folders](/pict1.png)
+
+### All Records – This will contain all the records in MusicDataDetailed
+![All folders](/pict2.png)
+
+### Top10Stations – This will top 10 stations having maximum music played which are liked by unique users
+
+![Top10UnsubscribedUsers](/pict3.png)
+
+### Top10UnsubscribedUsers – Top 10 unsubscribed users who listened to the music for maximum duration
+
+![Top10UnsubscribedUsers](/pict4.png)
+
+
+### TotalDurationByCategory – This will report total duration of music played by each time of user (unsubscribed/unsubscribed)
+
+![TotalDurationByCategory](/pict5.png)
+
+### DurationByCategory – This will report total duration of music played by each time of user (unsubscribed/unsubscribed)
+![TotalDurationByCategory](/pict6.png)
+
+### Top10ConnectedArtists : Top 10 Connected Artists
+![Top10ConnectedArtists](/pict7.png)
+
+### Top10SongsHavingMaximumRevenue: Top 10 songs have maximum revenue
+
+![Top10SongsHavingMaximumRevenue](/pict8.png)
+
+
+### Top10UnsubscribedUsers – Top 10 unsubscribed users who listened to the music for maximum duration
+
+![Top10UnsubscribedUsers](/pict8.png)
+
+
+
+## Module7: Script for running the Music Data App
+
+A bash script music_data_spark_app.sh is created and it content is as below:
+
+
+#!/bin/bash
+
+export HBASE_PATH=`/usr/local/hbase/bin/hbase classpath`
+cd $SPARK_HOME
+
+echo "Starting the Music Data Application"
+bin/spark-submit --class final_project.MusicDataProcessorApp --driver-class-path $HBASE_PATH --master local[2] --packages com.databricks:spark-csv_2.10:1.4.0  ~/scala_eclipse/workspace/process-music-data/target/process_music_data-0.0.1-SNAPSHOT.jar > output.log 2>&1
+
+echo "Completed the Music Data Application"
+
+
+Next, a cron job is created using “crontab –e” so that the script is run every 3 hours
+Content is as below
+0 */4 * * * /home/acadgild/project_music_data_analysis/music_data_spark_app.sh
+
+
+## Highlights of the project
+
+i.	No join of query is used while analysiss. Data is already enriched with new fields and using broadcast maps on Lookup tables so as to avoid any join
+ii.	Logger has been used in all over the code to allow
+
+
+## Issues Faced and how to resolve it
+
+While doing project, I face following issues and how I resolved it
+
+i.	XML processing – I found the databricks provides he XML processing APIs in spark. But it was not working. The main issue I face 
+ I was trying the process the xml dataset (file-1.xml) to covert to spark dataframe as given for the final project. I have created a scala Object ReadXMLMusicData.scala based on the steps given in
+
+https://github.com/databricks/spark-xml
+
+Created maven project with pom.xml attached. Using mvn install, I am able to generate jar file read_xml_music_data-0.0.1-SNAPSHOT.jar . However when I try to deploy to spark using spark-submit on Acadgild VM
+
+bin/spark-submit --class ReadXMLMusicData --master local[2] --driver-class-path /home/acadgild/.m2/repository/com/databricks/spark-xml_2.10/0.4.1/spark-xml_2.11-0.4.1.jar   ~/scala_eclipse/workspace/read_xml_music_data/target/read_xml_music_data-0.0.1-SNAPSHOT.jar 
+
+Exception in thread "main" java.lang.NoSuchMethodError: org.apache.spark.sql.DataFrameReader.load(Ljava/lang/String;)Lorg/apache/spark/sql/Dataset;
+    at ReadXMLMusicData$.main(ReadXMLMusicData.scala:12)
+    at ReadXMLMusicData.main(ReadXMLMusicData.scala)
+    at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+    at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+    at java.lang.reflect.Method.invoke(Method.java:497)
+    at org.apache.spark.deploy.SparkSubmit$.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:731)
+    at org.apache.spark.deploy.SparkSubmit$.doRunMain$1(SparkSubmit.scala:181)
+    at org.apache.spark.deploy.SparkSubmit$.submit(SparkSubmit.scala:206)
+    at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:121)
+    at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)
+
+I tried  all the options
+1. --packages com.databricks:spark-xml_2.10:0.4.1
+2. --packages com.databricks:spark-xml_2.11:0.4.1 
+3. --driver-class-path /home/acadgild/.m2/repository/com/databricks/spark-xml_2.10/0.4.1/spark-xml_2.10-0.4.1.jar
+4. --driver-class-path /home/acadgild/.m2/repository/com/databricks/spark-xml_2.10/0.4.1/spark-xml_2.11-0.4.1.jar
+
+
+
+
+Acadgild gave the following solution:
+DataFrame() was supplanted in Spark 2 by Dataset(). You'll need to import org.apache.spark.sql.Dataset and use that if you're running a Spark 1.6 client with a Spark 2.1 server-side. it would be a lot better off using at least Spark 2.1.+ dependencies.
+
+Follow the below link to download newer version of spark.
+
+Spark_Download
+
+
+But I solved this I used a xml APIs from scala.xml.XML. Relevant links are as below:
+https://alvinalexander.com/scala/how-to-extract-data-from-xml-nodes-in-scala 
+ https://hadoopist.wordpress.com/2016/01/08/parsing-a-basic-xml-using-hadoop-and-spark-core-apis/ 
+ http://www.scala-lang.org/api/2.11.1/scala-xml
+
+
+ii.	Task Not Serializable Exception:
+I am encoutering "org.apache.spark.SparkException: Task Not Serializable"  In the code below when Artist_id is blank I try to get it using Song_Id from broadcastSongArtistMap.  The dataset used is the mobile dataset. Basically exception is thrown in the line below:
+
+if (x(2).equals("")) broadcastSongArtistMap.value.get(x(1)).getOrElse("Invalid") else x(2),
+
+The job is submitted using spark-submit. I would very much appreciate, if you can give me a solution on this ( I tied lot of things, but could not make it work)
+
+Code snippet is as below:
+
+val songArtistMap = Map("S200" -> "A300",
+                         "S201" -> "A301",
+                         "S202" -> "A302",
+                         "S203" -> "A303",
+                         "S204" -> "A304",
+                         "S205" -> "A301",
+                         "S206" -> "A302",
+                         "S207" -> "A303",
+                         "S208" -> "A304",
+                         "S209" -> "A305"
+                      )
+val broadcastSongArtistMap = sc.broadcast(songArtistMap) 
+
+case class MusicData(User_id:String, Song_id:String, Artist_id:String, Timestamp:Long,
+      Start_ts:Long, End_ts:Long, Geo_cd:String, Station_id:String, Song_end_type:String,
+      Like:String, Dislike:String)
+
+val recordRDD = sc.textFile("/home/acadgild/final_project/file.txt")
+val recordFieldsRDD = recordRDD.map(x => x.split(",")).filter(x=> x.length ==11)
+   
+val recordDF = recordFieldsRDD.map(x => MusicData(x(0),
+        x(1), 
+        if (x(2).equals("")) broadcastSongArtistMap.value.get(x(1)).getOrElse("Invalid") else x(2),
+        x(3).toLong, 
+        x(4).toLong,
+        x(5).toLong,
+        x(6),
+        x(7),
+        x(8),
+        if (x(9).equals("")) "0" else x(9),
+        if (x(10).equals("")) "0" else x(10))).toDF
+
+recordDF.show
+
+
+Solution: The problem was that SparkContext as parameter to class MobileMusicDataProcessor was not Serializable. When I removed the SparkContext, it worked
+
+
+iii.	Continue does not work for scala:
+
+There is no support for continue in scala. To use it I created a case class 
+CustomException(message:String) extends Exception(message)
+
+Then used 
+
+
+iv.	HBase support with Spark
+
+I used the following link:
+
+https://acadgild.com/blog/spark-on-hbase/
+ 
+ https://acadgild.com/blog/apache-hbase-beginners-guide/
+
+Even using that the multiple fields were not working. To solve  this, I used the following code:
+
+
+val hbaseRDD = sc.newAPIHadoopRDD(hconf, classOf[TableInputFormat], classOf[org.apache.hadoop.hbase.io.ImmutableBytesWritable], classOf[org.apache.hadoop.hbase.client.Result])
+
+    val resultRDD = hbaseRDD.map(tuple=>tuple._2)
+   
+    
+    val keyValueRDD = resultRDD.map(result => (Bytes.toString(result.getRow()).split(" ")(0), (
+        if (Bytes.toString(result.getValue(new String("Subscription").getBytes(), new String("Start_ts").getBytes)).equals("")) 0 else Bytes.toString(result.getValue(new String("Subscription").getBytes(), new String("Start_ts").getBytes)).toLong,
+        if (Bytes.toString(result.getValue(new String("Subscription").getBytes(), new String("End_ts").getBytes)).equals("")) 0 else Bytes.toString(result.getValue(new String("Subscription").getBytes(), new String("End_ts").getBytes)).toLong
+        )))
+
+v.	Map was giving compilation error
+
+There are two types of Map Mutable and Immutable
+
+I needed to convert to Immutable map to make the compilation work using the following:
+
+  val map = keyValueRDD.collectAsMap
+   return scala.collection.immutable.Map(map.toSeq:_*)
+
+
+vi.	toDF does not work and giving compilation error
+To solve this I needed o add:
+
+import sqlContext.implicits._
+
+To every class
+
+vii.	The following command was giving exception:
+
+sqlContext.resisterTempTable(“MusicDataDetailed”)
+
+The problem was not I was creating sqlContext in every class and dataframe was created tow different classes. To solve this I had to use one sqlContext created at MusicDataProcessorApp
+
+  try {
+        if (userId.equals("") && songId.equals("") && artistId.equals("")) {
+          throw CustomException("Record is blank")
+        } else {
+          recordListBuffer += ((userId, songId, artistId, timestampLong, startTsLong, endTsLong, geoCd, stationId, songEndType, like, dislike))
+        }
+      } catch {
+        case CustomException(msg) => msg
+      }
+    }
+
+
+
+viii.	Not able to store query result to file..
+
+
+To use this I used databricks csv API:
+
+val df = sqlContext.sql("SELECT Songs_id, SUM(duration) AS total_duration_milliseconds FROM SongDuration "
+      + " GROUP BY Songs_id ORDER BY total_duration_milliseconds DESC LIMIT 10")
+    df.show()
+    val df1 = df.repartition(1)
+    df1.write.format("com.databricks.spark.csv").option("header", "true").save(reportBasePath + "/Top10SongsHavignMaximumRevenue_" + currentTimestamp)
+
+
+bin/spark-submit --class final_project.MusicDataProcessorApp --master local[2] --packages com.databricks:spark-csv_2.10:1.4.0 --driver-java-options "-Dlog4j.configuration=file:/usr/local/spark/spark-1.6.0-bin-hadoop2.6/conf/log4j.properties" ~/scala_eclipse/workspace/process-music-data/target/process_music_data-0.0.1-SNAPSHOT.jar > output.log 2>&1
+
+
+ix.	AnalysisException whenever I used a field which does not exist because of case. For example Song_Id, but the schma it is Song_id. Even if I restart or whatever I does not work. I needed to change the schema to Songs_id to solve this
+
+
+
+
+
+
+
 
 
 
