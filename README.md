@@ -24,8 +24,11 @@ i.	LoadHBaseTables– This is used for loading the lookup data from csv files to
       d. UserSubscription- This HBase table is used for storing mapping beween userId and subscription start timestamp and end timestamp
       
 ii.	MusicDataProcessorApp - This is the main application for processing music data. It in turn calls multiple submodules as below
+
 iii.	WebMusicDataProcessor – This is the class for processing music data stored in /data/web/file-1.xml  folder and use processData method to return dataframes
+
 iv.	MobileMusicDataProcessor - This is the class for processing music data stored in /data/mob/file.txt folder and use processData method to return dataframes
+
 v.	MusicDataEnricher - This is the used for enriching and validating the datasets. New columns are added to dataframe for the processed data. The new columns added to temporary table MusicDataDetailed are as below:
 
           a.  modified_Geo_cd – This field is used to populate Null/blank values in Geo_cd column. If Geo_cd column is not blank, the value will copied as it is to modified_Geo_cd. If Geo_cd column is  blank then consults the look table StationIdGeoCd based on stationId, If found populate it, else put value Invalid          
@@ -44,6 +47,7 @@ v.	MusicDataEnricher - This is the used for enriching and validating the dataset
 
           
 vi.	MusicDataPopulateMapFromLookupTables - This is the used for populating maps from HBase tables used for lookup
+
 vii.	MusicDataAnalyzer - - This is used for analyzing the data in dataframes and store the results in HDFS file:
 
          Top10Stations_<Timestamp> - Top 10 stations where maximum number of songs played which is liked by unique user
